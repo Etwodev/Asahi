@@ -13,7 +13,7 @@ type Server struct {
 	name         string
 	address      string
 	connection   string
-	status       string
+	status       bool
 	experimental bool
 	middlewares  []middleware.Middleware
 	routers      []router.Router
@@ -43,8 +43,18 @@ func (s Server) Experimental() bool {
 	return s.experimental
 }
 
-func (s Server) Status() string {
+func (s Server) Status() bool {
 	return s.status
+}
+
+func (s Server) Start() {
+	s.status = true
+	// start server
+}
+
+func (s Server) Stop() {
+	s.status = false
+	//stop server
 }
 
 func Create(version string, port string, name string, address string, connection string, experimental bool) *Server {
@@ -66,12 +76,12 @@ func (s *Server) LoadMiddleware(middlewares ...middleware.Middlware) {
 	s.routers = append(s.middlewares, middlewares...)
 }
 
-func (s *Server) Handler() *chi.Mux {
+func (s *Server) handler() *chi.Mux {
 	m := chi.NewMux()
-	for _, w := range s.middlewares {
-		if w.Status() && (w.Experimental() == s.Experimental() || !w.Experimental()) {
-			log.Info().Bool("Experimental", w.Experimental()).Bool("Status", w.Status()).Str("Method", w.Method()).Msg("Registering middlewear")
-			m.Use(w.Method())
+	for _, middleware := range s.middlewares {
+		if middleware.Status() && (middleware.Experimental() == s.Experimental() || !middleware.Experimental()) {
+			log.Info().Bool("Experimental", middleware.Experimental()).Bool("Status", middleware.Status()).Str("Method", middleware.Method()).Msg("Registering middlewear")
+			m.Use(middleware.Method())
 		}
 	}
 	s.initMux(m)
