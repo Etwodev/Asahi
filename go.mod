@@ -1,4 +1,4 @@
-module github.com/SpeedSlime/Covalence
+module github.com/SpeedSlime/Asahi
 
 go 1.18
 

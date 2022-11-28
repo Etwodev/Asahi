@@ -1,4 +1,4 @@
-package server
+package asahi
 
 import (
 	"context"
@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SpeedSlime/Covalence/server/middleware"
-	"github.com/SpeedSlime/Covalence/server/router"
+	"github.com/SpeedSlime/Asahi/middleware"
+	"github.com/SpeedSlime/Asahi/router"
+
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog/log"
 )
@@ -48,6 +49,24 @@ func (s Server) Status() bool {
 	return s.status
 }
 
+func Create(version string, port string, name string, address string, experimental bool) *Server {
+	return &Server{
+		version:      version,
+		port:         port,
+		experimental: experimental,
+		name:         name,
+		address:      address,
+	}
+}
+
+func (s *Server) LoadRouter(routers ...router.Router) {
+	s.routers = append(s.routers, routers...)
+}
+
+func (s *Server) LoadMiddleware(middlewares ...middleware.Middleware) {
+	s.middlewares = append(s.middlewares, middlewares...)
+}
+
 func (s *Server) Start() {
 	s.status = true
 	s.instance = &http.Server{Addr: s.Port(), Handler: s.handler()}
@@ -66,24 +85,6 @@ func (s *Server) Stop() (error) {
         return fmt.Errorf("Stop: failed to stop server: %w", err)
     }
 	return nil
-}
-
-func Create(version string, port string, name string, address string, experimental bool) *Server {
-	return &Server{
-		version:      version,
-		port:         port,
-		experimental: experimental,
-		name:         name,
-		address:      address,
-	}
-}
-
-func (s *Server) LoadRouter(routers ...router.Router) {
-	s.routers = append(s.routers, routers...)
-}
-
-func (s *Server) LoadMiddleware(middlewares ...middleware.Middleware) {
-	s.middlewares = append(s.middlewares, middlewares...)
 }
 
 func (s *Server) handler() (*chi.Mux) {
