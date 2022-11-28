@@ -78,7 +78,7 @@ func Create(version string, port string, name string, address string, experiment
 	}
 }
 
-func (s *Server) LoadRouters(routers ...router.Router) {
+func (s *Server) LoadRouter(routers ...router.Router) {
 	s.routers = append(s.routers, routers...)
 }
 
