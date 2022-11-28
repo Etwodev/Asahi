@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
@@ -19,6 +18,7 @@ type Server struct {
 	address      string
 	status       bool
 	experimental bool
+	idle		 chan struct{}
 	middlewares  []middleware.Middleware
 	routers      []router.Router
 }
@@ -56,53 +56,27 @@ func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 }
 
 func (s *Server) Start() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		call := <-c
-		s.status = false
-		log.Info().Msgf("Stop: system call: %w", call)
-		cancel()
-	}()
-
-	if err := s.Stop(ctx); err != nil {
-		log.Info().Msgf("Stop: failed to serve: %w", err)
-	}
-}
-
-
-func (s *Server) Stop(ctx context.Context) (err error) {
 	instance := &http.Server{Addr: s.Port(), Handler: s.handler()}
-	go func() {
-		if err := instance.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Msgf("ListenAndServe: unexpected error: %w", err)
-		}
-	}()
-	s.status = true
-
 	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
-	<-ctx.Done()
-
-	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
-
-	swift, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer func() {
-		cancel()
+	s.idle = make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+		if err := instance.Shutdown(context.Background()); err != nil {
+			log.Fatal().Msgf("Shutdown: server shutdown failed: %w", err)
+		}
+		close(s.idle)
 	}()
 
-	if err := instance.Shutdown(swift); err != nil {
-		log.Fatal().Msgf("Shutdown: server shutdown failed: %w", err)
-	}
-	
-	if err == http.ErrServerClosed {
-		err = nil
+	if err := instance.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatal().Msgf("ListenAndServe: unexpected error: %w", err)
 	}
 
-	return
+	<-s.idle
+	
+	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 }
 
 func (s *Server) handler() (*chi.Mux) {
