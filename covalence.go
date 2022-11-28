@@ -2,8 +2,6 @@ package covalence
 
 import (
 	"fmt"
-	"net/http"
-
 	"github.com/SpeedSlime/Covalence/server"
 	"github.com/SpeedSlime/Covalence/server/middleware"
 	"github.com/SpeedSlime/Covalence/server/router"
@@ -68,21 +66,22 @@ func (n *Network) Create(version string, port string, name string, address strin
 	return nil
 }
 
-func (n *Network) NewRouter(name string, status bool, routes []router.Route, opts ...router.RouterWrapper) (error) {
+
+func (n *Network) LoadRouters(name string, routers ...router.Router) (error) {
 	s, err := n.find(name)
 	if err != nil {
 		return fmt.Errorf("LoadRouters: failed to find server: %w", err)
 	}
-	s.LoadRouter(router.NewRouter(routes, status, opts...))
+	s.LoadRouter(routers...)
 	return nil
 }
 
-func (n *Network) NewMiddleware(name string, status bool, method func(http.Handler) http.Handler, experimental bool, opts ...middleware.MiddlewareWrapper) (error) {
+func (n *Network) LoadMiddlewares(name string, middlewares ...middleware.Middleware) (error) {
 	s, err := n.find(name)
 	if err != nil {
 		return fmt.Errorf("LoadMiddlewares: failed to find server: %w", err)
 	}
-	s.LoadMiddleware(middleware.NewMiddleware(method, status, experimental, opts...))
+	s.LoadMiddleware(middlewares...)
 	return nil
 }
 
