@@ -30,6 +30,10 @@ type Network struct {
 	servers		[]*server.Server
 }
 
+func New() (*Network) {
+	return &Network{}
+}
+
 func (n *Network) Find(name string) (*server.Server, error) {
 	for _, server := range n.servers {
 		if ( server.Name() == name  ) {
