@@ -17,7 +17,6 @@ type Server struct {
 	port         string
 	name         string
 	address      string
-	connection   string
 	status       bool
 	experimental bool
 	instance	 *http.Server
@@ -35,10 +34,6 @@ func (s Server) Port() string {
 
 func (s Server) Name() string {
 	return s.name
-}
-
-func (s Server) Connection() string {
-	return s.connection
 }
 
 func (s Server) Address() string {
@@ -73,14 +68,13 @@ func (s *Server) Stop() (error) {
 	return nil
 }
 
-func Create(version string, port string, name string, address string, connection string, experimental bool) *Server {
+func Create(version string, port string, name string, address string, experimental bool) *Server {
 	return &Server{
 		version:      version,
 		port:         port,
 		experimental: experimental,
 		name:         name,
 		address:      address,
-		connection:   connection,
 	}
 }
 

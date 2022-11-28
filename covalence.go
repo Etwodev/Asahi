@@ -58,11 +58,11 @@ func (n *Network) check(name string, port string) (error) {
 	return nil 
 }
 
-func (n *Network) Create(version string, port string, name string, address string, connection string, experimental bool) (error) {
+func (n *Network) Create(version string, port string, name string, address string, experimental bool) (error) {
 	if err := n.check(name, port); err != nil {
 		return fmt.Errorf("Create: could not create server: %w", err)
 	}
-	n.servers = append(n.servers, server.Create(version, port, name, address, connection, experimental))
+	n.servers = append(n.servers, server.Create(version, port, name, address, experimental))
 	return nil
 }
 
