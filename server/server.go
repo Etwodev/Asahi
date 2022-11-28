@@ -1,6 +1,11 @@
 package server
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/SpeedSlime/Covalence/server/middleware"
 	"github.com/SpeedSlime/Covalence/server/router"
 	"github.com/go-chi/chi"
@@ -15,6 +20,7 @@ type Server struct {
 	connection   string
 	status       bool
 	experimental bool
+	instance	 *http.Server
 	middlewares  []middleware.Middleware
 	routers      []router.Router
 }
@@ -47,14 +53,24 @@ func (s Server) Status() bool {
 	return s.status
 }
 
-func (s Server) Start() {
+func (s *Server) Start() {
 	s.status = true
-	// start server
+	s.instance = &http.Server{Addr: s.Port(), Handler: s.handler()}
+	go func() {
+		if err := s.instance.ListenAndServe(); err != http.ErrServerClosed {
+			fmt.Println("Start: server failure: %w", err)
+		}
+	}()
 }
 
-func (s Server) Stop() {
+func (s *Server) Stop() (error) {
 	s.status = false
-	//stop server
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    if err := s.instance.Shutdown(ctx); err != nil {
+        return fmt.Errorf("Stop: failed to stop server: %w", err)
+    }
+	return nil
 }
 
 func Create(version string, port string, name string, address string, connection string, experimental bool) *Server {
@@ -72,15 +88,15 @@ func (s *Server) LoadRouters(routers ...router.Router) {
 	s.routers = append(s.routers, routers...)
 }
 
-func (s *Server) LoadMiddleware(middlewares ...middleware.Middlware) {
-	s.routers = append(s.middlewares, middlewares...)
+func (s *Server) LoadMiddleware(middlewares ...middleware.Middleware) {
+	s.middlewares = append(s.middlewares, middlewares...)
 }
 
-func (s *Server) handler() *chi.Mux {
+func (s *Server) handler() (*chi.Mux) {
 	m := chi.NewMux()
 	for _, middleware := range s.middlewares {
 		if middleware.Status() && (middleware.Experimental() == s.Experimental() || !middleware.Experimental()) {
-			log.Info().Bool("Experimental", middleware.Experimental()).Bool("Status", middleware.Status()).Str("Method", middleware.Method()).Msg("Registering middlewear")
+			log.Info().Bool("Experimental", middleware.Experimental()).Bool("Status", middleware.Status()).Msg("Registering middlewear")
 			m.Use(middleware.Method())
 		}
 	}
