@@ -14,9 +14,7 @@ import (
 )
 
 type Server struct {
-	version      string
 	port         string
-	name         string
 	address      string
 	status       bool
 	experimental bool
@@ -25,16 +23,8 @@ type Server struct {
 	routers      []router.Router
 }
 
-func (s Server) Version() string {
-	return s.version
-}
-
 func (s Server) Port() string {
 	return s.port
-}
-
-func (s Server) Name() string {
-	return s.name
 }
 
 func (s Server) Address() string {
@@ -49,12 +39,10 @@ func (s Server) Status() bool {
 	return s.status
 }
 
-func Create(version string, port string, name string, address string, experimental bool) *Server {
+func New(port string, address string, experimental bool) *Server {
 	return &Server{
-		version:      version,
 		port:         port,
 		experimental: experimental,
-		name:         name,
 		address:      address,
 	}
 }
@@ -63,7 +51,7 @@ func (s *Server) LoadRouter(routers ...router.Router) {
 	s.routers = append(s.routers, routers...)
 }
 
-func (s *Server) LoadMiddleware(middlewares ...middleware.Middleware) {
+func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 	s.middlewares = append(s.middlewares, middlewares...)
 }
 
