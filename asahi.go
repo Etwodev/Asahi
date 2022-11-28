@@ -74,7 +74,7 @@ func (s *Server) Start() {
 }
 
 
-func (s *Server) Stop(ctx context.Context) (error) {
+func (s *Server) Stop(ctx context.Context) (err error) {
 	instance := &http.Server{Addr: s.Port(), Handler: s.handler()}
 	go func() {
 		if err := instance.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -82,6 +82,7 @@ func (s *Server) Stop(ctx context.Context) (error) {
 		}
 	}()
 	s.status = true
+
 	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
 	<-ctx.Done()
@@ -96,7 +97,12 @@ func (s *Server) Stop(ctx context.Context) (error) {
 	if err := instance.Shutdown(swift); err != nil {
 		log.Fatal().Msgf("Shutdown: server shutdown failed: %w", err)
 	}
-	return nil
+	
+	if err == http.ErrServerClosed {
+		err = nil
+	}
+
+	return
 }
 
 func (s *Server) handler() (*chi.Mux) {
