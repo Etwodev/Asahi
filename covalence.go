@@ -34,7 +34,7 @@ func New() (*Network) {
 	return &Network{}
 }
 
-func (n *Network) Find(name string) (*server.Server, error) {
+func (n *Network) find(name string) (*server.Server, error) {
 	for _, server := range n.servers {
 		if ( server.Name() == name  ) {
 			return server, nil
@@ -46,7 +46,7 @@ func (n *Network) Find(name string) (*server.Server, error) {
 	}
 }
 
-func (n *Network) Check(name string, port string) (error) {
+func (n *Network) check(name string, port string) (error) {
 	for _, server := range n.servers {
 		if ( server.Name() == name || server.Port() == port) {
 			return &AlreadyExistsError{
@@ -59,7 +59,7 @@ func (n *Network) Check(name string, port string) (error) {
 }
 
 func (n *Network) Create(version string, port string, name string, address string, connection string, experimental bool) (error) {
-	if err := n.Check(name, port); err != nil {
+	if err := n.check(name, port); err != nil {
 		return fmt.Errorf("Create: could not create server: %w", err)
 	}
 	n.servers = append(n.servers, server.Create(version, port, name, address, connection, experimental))
@@ -68,7 +68,7 @@ func (n *Network) Create(version string, port string, name string, address strin
 
 
 func (n *Network) LoadRouters(name string, routers ...router.Router) (error) {
-	s, err := n.Find(name)
+	s, err := n.find(name)
 	if err != nil {
 		return fmt.Errorf("LoadRouters: failed to find server: %w", err)
 	}
@@ -77,7 +77,7 @@ func (n *Network) LoadRouters(name string, routers ...router.Router) (error) {
 }
 
 func (n *Network) LoadMiddlewares(name string, middlewares ...middleware.Middleware) (error) {
-	s, err := n.Find(name)
+	s, err := n.find(name)
 	if err != nil {
 		return fmt.Errorf("LoadMiddlewares: failed to find server: %w", err)
 	}
@@ -89,7 +89,7 @@ func (n *Network) Start(name string, invoke func()) (error) {
 	if invoke != nil {
 		invoke()
 	}
-	s, err := n.Find(name)
+	s, err := n.find(name)
 	if err != nil || s.Status() {
 		return fmt.Errorf("Start: failed to find valid server: %w", err)
 	}
@@ -98,7 +98,7 @@ func (n *Network) Start(name string, invoke func()) (error) {
 }
 
 func (n *Network) Stop(name string) (error) {
-	s, err := n.Find(name)
+	s, err := n.find(name)
 	if err != nil {
 		return fmt.Errorf("Stop: failed to find server: %w", err)
 	}
