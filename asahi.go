@@ -19,7 +19,6 @@ type Server struct {
 	address      string
 	status       bool
 	experimental bool
-	instance	 *http.Server
 	middlewares  []middleware.Middleware
 	routers      []router.Router
 }
@@ -77,25 +76,27 @@ func (s *Server) Start() {
 
 
 func (s *Server) Stop(ctx context.Context) (error) {
-	s.instance = &http.Server{Addr: s.Port(), Handler: s.handler()}
+	instance := &http.Server{Addr: s.Port(), Handler: s.handler()}
 	go func() {
-		if err := s.instance.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := instance.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Msgf("ListenAndServe: unexpected error: %w", err)
 		}
 	}()
+
 	s.status = true
+
 	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
 	<-ctx.Done()
 
 	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	swift, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
 		cancel()
 	}()
 
-	if err := s.instance.Shutdown(ctx); err != nil {
+	if err := instance.Shutdown(swift); err != nil {
 		log.Fatal().Msgf("Shutdown: server shutdown failed: %w", err)
 	}
 	return nil
