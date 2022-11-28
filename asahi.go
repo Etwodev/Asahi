@@ -56,16 +56,15 @@ func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 }
 
 func (s *Server) Start() {
-
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
-		oscall := <-c
-		log.Info().Msgf("Stop: system call: %w", oscall)
+		call := <-c
 		s.status = false
+		log.Info().Msgf("Stop: system call: %w", call)
 		cancel()
 	}()
 
@@ -82,9 +81,7 @@ func (s *Server) Stop(ctx context.Context) (error) {
 			log.Fatal().Msgf("ListenAndServe: unexpected error: %w", err)
 		}
 	}()
-
 	s.status = true
-
 	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
 	<-ctx.Done()
