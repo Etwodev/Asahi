@@ -53,15 +53,17 @@ func (c Config) Directory() string {
 	return c.assets
 }
 
-func (c *Config) Defaults() {
-	c.port = "8080"
-	c.address = "localhost"
-	c.assets = "./assets"
-	c.experimental = false
+func Defaults() {
+	c = &Config{
+		port: "8080",
+		address: "localhost",
+		assets: "./assets",
+		experimental: false,
+	}
 }
 
 func New() *Server {
-    c.Defaults()
+    Defaults()
 	_, err := os.Stat(ASAHI_CONF)
 	switch err {
 	case os.ErrNotExist:
