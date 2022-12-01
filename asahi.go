@@ -15,7 +15,7 @@ import (
 )
 
 const (
-    ASAHI_CONF = "./asahi.conf"
+    ASAHI_CONF = "asahi.conf"
 )
 
 var c *Config
