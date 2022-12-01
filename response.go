@@ -1,10 +1,11 @@
-package reply
+package asahi
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
+
 )
 
 func RespondWithError(w http.ResponseWriter, err error) error {
@@ -14,7 +15,7 @@ func RespondWithError(w http.ResponseWriter, err error) error {
 }
 
 func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
-	bin, err := open(fmt.Sprintf( "/assets/%s", filepath.Clean(path)));
+	bin, err := open(fmt.Sprintf(c.assets, filepath.Clean(path)));
 	if err != nil {
 		return RespondWithError(w, err)
 	}

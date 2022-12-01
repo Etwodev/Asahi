@@ -15,7 +15,7 @@ import (
 )
 
 const (
-    ASAHI_CONF = "asahi.conf"
+    ASAHI_CONF = "./asahi.conf"
 )
 
 var c *Config
@@ -53,17 +53,8 @@ func (c Config) Directory() string {
 	return c.assets
 }
 
-func Defaults() {
-	c = &Config{
-		port: "8080",
-		address: "localhost",
-		assets: "./assets",
-		experimental: false,
-	}
-}
-
 func New() *Server {
-    Defaults()
+    defaults()
 	_, err := os.Stat(ASAHI_CONF)
 	switch err {
 	case os.ErrNotExist:

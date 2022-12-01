@@ -1,10 +1,9 @@
-package reply
+package asahi
 
 import (
 	"io/ioutil"
 	"os"
 )
-
 
 func open(path string) ([]byte, error) {
     bin, err := os.Open(path)
@@ -12,4 +11,13 @@ func open(path string) ([]byte, error) {
 	out, err := ioutil.ReadAll(bin)
     if err == nil { return out, nil }
     return nil, &RequestError{Function: "open", StatusCode: 500, Err: err,}
+}
+
+func defaults() {
+	c = &Config{
+		port: "8080",
+		address: "localhost",
+		assets: "./assets",
+		experimental: false,
+	}
 }
