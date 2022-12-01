@@ -14,6 +14,7 @@ var c *Config
 type Config struct {
 	port         string
 	address      string
+	assets		 string
 	experimental bool
 }
 
@@ -28,6 +29,11 @@ func (c Config) Address() string {
 func (c Config) Experimental() bool {
 	return c.experimental
 }
+
+func (c Config) Assets() string {
+	return c.assets
+}
+
 
 func Load() error {
 	_, err := os.Stat(CONFIG)
@@ -50,7 +56,7 @@ func Load() error {
 }
 
 func Create() error {
-	file, err := json.MarshalIndent(&Config{port: "8080", address: "localhost", experimental: false}, "", " ")
+	file, err := json.MarshalIndent(&Config{port: "8080", address: "localhost", experimental: false, assets: "./assets"}, "", " ")
 	if err != nil {
 		return fmt.Errorf("Create: failed marshalling config: %w", err)
 	}
