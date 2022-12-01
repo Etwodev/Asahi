@@ -2,26 +2,21 @@ package asahi
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 
+	"github.com/SpeedSlime/Asahi/config"
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-    ASAHI_CONF = "./asahi.conf"
-)
-
-var c *Config
-type Server struct {	 
+type Server struct {	
 	status       bool
 	idle		 chan struct{}
+	config		 *config.Config 
 	middlewares  []middleware.Middleware
 	routers      []router.Router
 }
@@ -30,58 +25,13 @@ func (s Server) Status() bool {
 	return s.status
 }
 
-type Config struct {
-	port         string
-	address      string
-	experimental bool
-	assets		 string	
-}
-
-func (c Config) Port() string {
-	return c.port
-}
-
-func (c Config) Address() string {
-	return c.address
-}
-
-func (c Config) Experimental() bool {
-	return c.experimental
-}
-
-func (c Config) Directory() string {
-	return c.assets
-}
 
 func New() *Server {
-    defaults()
-	_, err := os.Stat(ASAHI_CONF)
-	switch err {
-	case os.ErrNotExist:
-		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Msg("Config not found")
-		file, err := json.MarshalIndent(c, "", " ")
-		if err != nil {
-			log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config marshal failed")
-		}
-		err = ioutil.WriteFile(ASAHI_CONF, file, 0644)
-		if err != nil {
-			log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config write failed")
-		}
-		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config been written successfully!")
-	case nil:
-		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Msg("Config found")
-	default:
-		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config search failed")
-	}
-	file, err := ioutil.ReadFile(ASAHI_CONF)
+	c, err := config.New()
 	if err != nil {
-		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config read failed")
+		log.Fatal().Str("Function", "New()").Err(err).Msg("Unexpected error")
 	}
-	err = json.Unmarshal(file, &c)
-	if err != nil {
-		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config unmarshal failed")
-	}
-	return &Server{}
+	return &Server{config: c}
 }
 
 func (s *Server) LoadRouter(routers []router.Router) {
@@ -93,9 +43,9 @@ func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 }
 
 func (s *Server) Start() {
-	instance := &http.Server{Addr: c.Port(), Handler: s.handler()}
+	instance := &http.Server{Addr: s.config.Port(), Handler: s.handler()}
 
-	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server started")
+	log.Info().Str("Port", s.config.Port()).Str("Address", s.config.Address()).Bool("Experimental", s.config.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
 	s.idle = make(chan struct{})
 	go func() {
@@ -114,13 +64,13 @@ func (s *Server) Start() {
 
 	<-s.idle
 	
-	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
+	log.Info().Str("Port", s.config.Port()).Str("Address", s.config.Address()).Bool("Experimental", s.config.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 }
 
 func (s *Server) handler() (*chi.Mux) {
 	m := chi.NewMux()
 	for _, middleware := range s.middlewares {
-		if middleware.Status() && (middleware.Experimental() == c.Experimental() || !middleware.Experimental()) {
+		if middleware.Status() && (middleware.Experimental() == s.config.Experimental() || !middleware.Experimental()) {
 			log.Info().Bool("Experimental", middleware.Experimental()).Bool("Status", middleware.Status()).Msg("Registering middlewear")
 			m.Use(middleware.Method())
 		}
@@ -133,7 +83,7 @@ func (s *Server) initMux(m *chi.Mux) {
 	for _, router := range s.routers {
 		if router.Status() {
 			for _, r := range router.Routes() {
-				if r.Status() && (r.Experimental() == c.Experimental() || !r.Experimental()) {
+				if r.Status() && (r.Experimental() == s.config.Experimental() || !r.Experimental()) {
 					log.Info().Bool("Experimental", r.Experimental()).Bool("Status", r.Status()).Str("Method", r.Method()).Str("Path", r.Path()).Msg("Registering route")
 					m.Method(r.Method(), r.Path(), r.Handler())
 				}

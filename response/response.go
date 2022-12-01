@@ -1,11 +1,12 @@
-package asahi
+package reply
 
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
-
 )
 
 func RespondWithError(w http.ResponseWriter, err error) error {
@@ -14,11 +15,9 @@ func RespondWithError(w http.ResponseWriter, err error) error {
 	return fmt.Errorf("RespondWithError: %w", err)
 }
 
-func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
-	bin, err := open(fmt.Sprintf(c.assets, filepath.Clean(path)));
-	if err != nil {
-		return RespondWithError(w, err)
-	}
+func RespondWithFile(w http.ResponseWriter, httpcode int, base string, path string) error {
+	bin, err := open(fmt.Sprintf(filepath.Clean(path)));
+	if err != nil { return RespondWithError(w, err) }
 	RespondWithDetect(w, httpcode, bin)
 	return nil
 }
@@ -29,9 +28,7 @@ func RespondWithCode(w http.ResponseWriter, httpcode int, code string) {
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) error {
 	res, err := json.Marshal(payload)
-	if err != nil {
-		return RespondWithError(w, &RequestError{Function: "RespondWithJSON", StatusCode: 500, Err: err,})
-	}
+	if err != nil { return RespondWithError(w, &RequestError{Function: "RespondWithJSON", StatusCode: 500, Err: err,}) }
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(res)
@@ -48,4 +45,12 @@ func RespondWithRaw(w http.ResponseWriter, code int, payload []byte) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.WriteHeader(code)
 	w.Write(payload)
+}
+
+func open(path string) ([]byte, error) {
+    bin, err := os.Open(path)
+	if os.IsNotExist(err) { return nil, &RequestError{Function: "open", StatusCode: 404, Err: err,} }
+	out, err := ioutil.ReadAll(bin)
+    if err == nil { return out, nil }
+    return nil, &RequestError{Function: "open", StatusCode: 500, Err: err,}
 }
