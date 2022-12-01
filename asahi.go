@@ -2,49 +2,93 @@ package asahi
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
-
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog/log"
 )
 
-type Server struct {
-	port         string
-	address      string
+const (
+    ASAHI_CONF = "./asahi.conf"
+)
+
+var c *Config
+type Server struct {	 
 	status       bool
-	experimental bool
 	idle		 chan struct{}
 	middlewares  []middleware.Middleware
 	routers      []router.Router
-}
-
-func (s Server) Port() string {
-	return s.port
-}
-
-func (s Server) Address() string {
-	return s.address
-}
-
-func (s Server) Experimental() bool {
-	return s.experimental
 }
 
 func (s Server) Status() bool {
 	return s.status
 }
 
-func New(port string, address string, experimental bool) *Server {
-	return &Server{
-		port:         port,
-		experimental: experimental,
-		address:      address,
+type Config struct {
+	port         string
+	address      string
+	experimental bool
+	assets		 string	
+}
+
+func (c Config) Port() string {
+	return c.port
+}
+
+func (c Config) Address() string {
+	return c.address
+}
+
+func (c Config) Experimental() bool {
+	return c.experimental
+}
+
+func (c Config) Directory() string {
+	return c.assets
+}
+
+func (c *Config) Defaults() {
+	c.port = "8080"
+	c.address = "localhost"
+	c.assets = "./assets"
+	c.experimental = false
+}
+
+func New() *Server {
+    c.Defaults()
+	_, err := os.Stat(ASAHI_CONF)
+	switch err {
+	case os.ErrNotExist:
+		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Msg("Config not found")
+		file, err := json.MarshalIndent(c, "", " ")
+		if err != nil {
+			log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config marshal failed")
+		}
+		err = ioutil.WriteFile(ASAHI_CONF, file, 0644)
+		if err != nil {
+			log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config write failed")
+		}
+		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config been written successfully!")
+	case nil:
+		log.Info().Str("Function", "New()").Str("Path", ASAHI_CONF).Msg("Config found")
+	default:
+		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config search failed")
 	}
+	file, err := ioutil.ReadFile(ASAHI_CONF)
+	if err != nil {
+		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config read failed")
+	}
+	err = json.Unmarshal(file, &c)
+	if err != nil {
+		log.Fatal().Str("Function", "New()").Str("Path", ASAHI_CONF).Err(err).Msg("Config unmarshal failed")
+	}
+	return &Server{}
 }
 
 func (s *Server) LoadRouter(routers []router.Router) {
@@ -56,8 +100,9 @@ func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 }
 
 func (s *Server) Start() {
-	instance := &http.Server{Addr: s.Port(), Handler: s.handler()}
-	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server started")
+	instance := &http.Server{Addr: c.Port(), Handler: s.handler()}
+
+	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
 	s.idle = make(chan struct{})
 	go func() {
@@ -65,24 +110,24 @@ func (s *Server) Start() {
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 		if err := instance.Shutdown(context.Background()); err != nil {
-			log.Fatal().Msgf("Shutdown: server shutdown failed: %w", err)
+			log.Warn().Str("Function", "Shutdown()").Err(err).Msg("Server shutdown failed!")
 		}
 		close(s.idle)
 	}()
 
 	if err := instance.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatal().Msgf("ListenAndServe: unexpected error: %w", err)
+		log.Fatal().Str("Function", "ListenAndServe()").Err(err).Msg("Unexpected error")
 	}
 
 	<-s.idle
 	
-	log.Info().Str("Port", s.Port()).Str("Address", s.Address()).Bool("Experimental", s.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
+	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 }
 
 func (s *Server) handler() (*chi.Mux) {
 	m := chi.NewMux()
 	for _, middleware := range s.middlewares {
-		if middleware.Status() && (middleware.Experimental() == s.Experimental() || !middleware.Experimental()) {
+		if middleware.Status() && (middleware.Experimental() == c.Experimental() || !middleware.Experimental()) {
 			log.Info().Bool("Experimental", middleware.Experimental()).Bool("Status", middleware.Status()).Msg("Registering middlewear")
 			m.Use(middleware.Method())
 		}
@@ -95,7 +140,7 @@ func (s *Server) initMux(m *chi.Mux) {
 	for _, router := range s.routers {
 		if router.Status() {
 			for _, r := range router.Routes() {
-				if r.Status() && (r.Experimental() == s.Experimental() || !r.Experimental()) {
+				if r.Status() && (r.Experimental() == c.Experimental() || !r.Experimental()) {
 					log.Info().Bool("Experimental", r.Experimental()).Bool("Status", r.Status()).Str("Method", r.Method()).Str("Path", r.Path()).Msg("Registering route")
 					m.Method(r.Method(), r.Path(), r.Handler())
 				}
