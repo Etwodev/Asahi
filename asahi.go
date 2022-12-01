@@ -25,6 +25,9 @@ func (s Server) Status() bool {
 	return s.status
 }
 
+func (s Server) Config() *config.Config {
+	return s.config
+}
 
 func New() *Server {
 	c, err := config.New()
