@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 
 	c "github.com/SpeedSlime/Asahi/config"
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
+
 	"github.com/fatih/color"
-
 	"github.com/go-chi/chi"
-
 	"github.com/rs/zerolog"
 )
 
@@ -45,10 +45,14 @@ func New() *Server {
 
 	l0 := color.New(color.FgMagenta, color.Bold).SprintFunc()
 	l1 := color.New(color.FgCyan).SprintFunc()
+	l2 := color.New(color.FgRed, color.Bold).SprintFunc()
+	l3 := color.New(color.FgGreen, color.Bold).SprintFunc()
+	l4 := color.New(color.FgBlue, color.Bold).SprintFunc()
+	l5 := color.New(color.FgMagenta, color.Bold).SprintFunc()
 
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time}
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time, NoColor: true,}
 	output.FormatLevel = func(i interface{}) string {
-		return fmt.Sprintf("%s%s", l1("\""), strings.ToUpper(l0(i)))
+		return fmt.Sprintf("%s%s", l1("\""), l0(strings.ToUpper(fmt.Sprintf("%s", i))))
 	}
 	output.FormatMessage = func(i interface{}) string {
 		return fmt.Sprintf("%s%s", l1(i), l1("\""))
@@ -57,7 +61,11 @@ func New() *Server {
 		return fmt.Sprintf("%s: ", i)
 	}
 	output.FormatFieldValue = func(i interface{}) string {
-		return strings.ToUpper(fmt.Sprintf("%s", i))
+		v := fmt.Sprintf("%s", i)
+		if v == "false" { return fmt.Sprintf("\"%s\"", l2(v)) }
+		if v == "true" { return fmt.Sprintf("\"%s\"", l3(v)) }
+		if _, err := strconv.Atoi(v); err == nil { return fmt.Sprintf("\"%s\"", l4(v)) }
+		return fmt.Sprintf("\"%s\"", l5(v))
 	}
 	
 	log = zerolog.New(output).With().Timestamp().Logger()
