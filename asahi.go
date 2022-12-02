@@ -2,6 +2,7 @@ package asahi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -41,7 +42,7 @@ func (s *Server) LoadMiddleware(middlewares []middleware.Middleware) {
 }
 
 func (s *Server) Start() {
-	instance := &http.Server{Addr: c.Port(), Handler: s.handler()}
+	instance := &http.Server{Addr: fmt.Sprintf("%s:%s", c.Address(), c.Port()), Handler: s.handler()}
 
 	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server started")
 
