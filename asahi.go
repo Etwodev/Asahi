@@ -129,3 +129,7 @@ func (s *Server) initMux(m *chi.Mux) {
 		}
 	}
 }
+
+func Parameter(r *http.Request, k string) string {
+	return chi.URLParam(r, k)
+}
