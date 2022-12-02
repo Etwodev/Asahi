@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	c "github.com/SpeedSlime/Asahi/config"
 )
 
 func RespondWithError(w http.ResponseWriter, err error) error {
@@ -15,8 +17,8 @@ func RespondWithError(w http.ResponseWriter, err error) error {
 	return fmt.Errorf("RespondWithError: %w", err)
 }
 
-func RespondWithFile(w http.ResponseWriter, httpcode int, base string, path string) error {
-	bin, err := open(fmt.Sprintf(filepath.Clean(path)));
+func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
+	bin, err := open(c.Assets() + filepath.Clean(path));
 	if err != nil { return RespondWithError(w, err) }
 	RespondWithDetect(w, httpcode, bin)
 	return nil

@@ -10,35 +10,27 @@ import (
 const CONFIG = "./config.json"
 
 var c *Config
-
 type Config struct {
-	port         string
-	address      string
-	assets		 string
-	experimental bool
-}
-
-type JSONConfig struct {
 	Port         string `json:"port"`
-	Address      string	`json:"address"`
-	Assets		 string	`json:"assets"`
-	Experimental bool	`json:"experimental"`
+	Address      string `json:"address"`
+	Assets		 string	 `json:"assets"`
+	Experimental bool	 `json:"experimental"`
 }
 
-func (c Config) Port() string {
-	return c.port
+func Port() string {
+	return c.Port
 }
 
-func (c Config) Address() string {
-	return c.address
+func Address() string {
+	return c.Address
 }
 
-func (c Config) Experimental() bool {
-	return c.experimental
+func Experimental() bool {
+	return c.Experimental
 }
 
-func (c Config) Assets() string {
-	return c.assets
+func Assets() string {
+	return c.Assets
 }
 
 
@@ -63,7 +55,7 @@ func Load() error {
 }
 
 func Create() error {
-	file, err := json.MarshalIndent(&JSONConfig{Port: "8080", Address: "localhost", Experimental: false, Assets: "./assets"}, "", " ")
+	file, err := json.MarshalIndent(&Config{Port: "8080", Address: "localhost", Experimental: false, Assets: "./assets"}, "", " ")
 	if err != nil {
 		return fmt.Errorf("Create: failed marshalling config: %w", err)
 	}
@@ -74,12 +66,12 @@ func Create() error {
 	return nil
 }
 
-func New() ( *Config, error ) {
+func New() ( error ) {
 	if c == nil {
 		err := Load()
 		if err != nil {
-			return nil, fmt.Errorf("New: failed loading json: %w", err)
+			return fmt.Errorf("New: failed loading json: %w", err)
 		}
 	}
-	return c, nil
+	return nil
 }
