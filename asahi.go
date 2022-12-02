@@ -6,19 +6,31 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	c "github.com/SpeedSlime/Asahi/config"
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
+	"github.com/fatih/color"
+
 	"github.com/go-chi/chi"
-	"github.com/rs/zerolog/log"
+
+	"github.com/rs/zerolog"
 )
 
-type Server struct {	
-	status       bool
-	idle		 chan struct{}
-	middlewares  []middleware.Middleware
-	routers      []router.Router
+var (
+	log zerolog.Logger
+)
+
+const (
+	time = "2006/01/02 15:04:05" 
+)
+
+type Server struct {
+	status      bool
+	idle        chan struct{}
+	middlewares []middleware.Middleware
+	routers     []router.Router
 }
 
 func (s Server) Status() bool {
@@ -30,6 +42,25 @@ func New() *Server {
 	if err != nil {
 		log.Fatal().Str("Function", "New").Err(err).Msg("Unexpected error")
 	}
+
+	l0 := color.New(color.FgMagenta, color.Bold).SprintFunc()
+	l1 := color.New(color.FgCyan).SprintFunc()
+
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time}
+	output.FormatLevel = func(i interface{}) string {
+		return fmt.Sprintf("%s%s", l1("\""), strings.ToUpper(l0(i)))
+	}
+	output.FormatMessage = func(i interface{}) string {
+		return fmt.Sprintf("%s%s", l1(i), l1("\""))
+	}
+	output.FormatFieldName = func(i interface{}) string {
+		return fmt.Sprintf("%s: ", i)
+	}
+	output.FormatFieldValue = func(i interface{}) string {
+		return strings.ToUpper(fmt.Sprintf("%s", i))
+	}
+	
+	log = zerolog.New(output).With().Timestamp().Logger()
 	return &Server{}
 }
 
@@ -62,11 +93,11 @@ func (s *Server) Start() {
 	}
 
 	<-s.idle
-	
+
 	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 }
 
-func (s *Server) handler() (*chi.Mux) {
+func (s *Server) handler() *chi.Mux {
 	m := chi.NewMux()
 	for _, middleware := range s.middlewares {
 		if middleware.Status() && (middleware.Experimental() == c.Experimental() || !middleware.Experimental()) {

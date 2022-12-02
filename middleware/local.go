@@ -1,7 +1,9 @@
 package middleware
 
+import "net/http"
+
 type preMiddleware struct {
-	method  MiddlewareHandler
+	method  func(http.Handler) http.Handler
 	status  bool
 	experimental bool
 }
@@ -11,7 +13,7 @@ type preMiddleware struct {
 type MiddlewareWrapper func(r Middleware) Middleware
 
 // Method returns the method that the middleware enacts.
-func (p preMiddleware) Method() MiddlewareHandler {
+func (p preMiddleware) Method() func(http.Handler) http.Handler {
 	return p.method
 }
 
@@ -26,7 +28,7 @@ func (p preMiddleware) Experimental() bool {
 }
 
 // NewMiddleware initializes a new local middleware for the server.
-func NewMiddleware(method MiddlewareHandler, status bool, experimental bool, opts ...MiddlewareWrapper) Middleware {
+func NewMiddleware(method func(http.Handler) http.Handler, status bool, experimental bool, opts ...MiddlewareWrapper) Middleware {
 	var m Middleware = preMiddleware{method, status, experimental}
 	for _, o := range opts {
 		m = o(m)
