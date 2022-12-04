@@ -8,22 +8,15 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-
 	c "github.com/SpeedSlime/Asahi/config"
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
-
-	"github.com/fatih/color"
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog"
 )
 
 var (
 	log zerolog.Logger
-)
-
-const (
-	time = "2006/01/02 15:04:05" 
 )
 
 type Server struct {
@@ -43,31 +36,17 @@ func New() *Server {
 		log.Fatal().Str("Function", "New").Err(err).Msg("Unexpected error")
 	}
 
-	l0 := color.New(color.FgMagenta, color.Bold).SprintFunc()
-	l1 := color.New(color.FgCyan).SprintFunc()
-	l2 := color.New(color.FgRed, color.Bold).SprintFunc()
-	l3 := color.New(color.FgGreen, color.Bold).SprintFunc()
-	l4 := color.New(color.FgBlue, color.Bold).SprintFunc()
-	l5 := color.New(color.FgMagenta, color.Bold).SprintFunc()
-
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time, NoColor: true,}
-	output.FormatLevel = func(i interface{}) string {
-		return fmt.Sprintf("%s%s", l1("\""), l0(strings.ToUpper(fmt.Sprintf("%s", i))))
-	}
-	output.FormatMessage = func(i interface{}) string {
-		return fmt.Sprintf("%s%s", l1(i), l1("\""))
-	}
-	output.FormatFieldName = func(i interface{}) string {
-		return fmt.Sprintf("%s: ", i)
-	}
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006/01/02 15:04:05", NoColor: true,}
+	output.FormatLevel = func(i interface{}) string { return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[35;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i))) }
+	output.FormatMessage = func(i interface{}) string { return fmt.Sprintf("\x1b[36m%s\x1b[0m\x1b[36m\"\x1b[0m", i) }
+	output.FormatFieldName = func(i interface{}) string { return fmt.Sprintf("%s: ", i) }
 	output.FormatFieldValue = func(i interface{}) string {
 		v := fmt.Sprintf("%s", i)
-		if v == "false" { return fmt.Sprintf("\"%s\"", l2(v)) }
-		if v == "true" { return fmt.Sprintf("\"%s\"", l3(v)) }
-		if _, err := strconv.Atoi(v); err == nil { return fmt.Sprintf("\"%s\"", l4(v)) }
-		return fmt.Sprintf("\"%s\"", l5(v))
+		if v == "false" { return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", v) }
+		if v == "true" { return fmt.Sprintf("\"\x1b[32;1m%s\x1b[0m\"", v) }
+		if _, err := strconv.Atoi(v); err == nil { return fmt.Sprintf("\"\x1b[34;1m%s\x1b[0m\"", v) }
+		return fmt.Sprintf("\"\x1b[35;1m%s\x1b[0m\"", v)
 	}
-	
 	log = zerolog.New(output).With().Timestamp().Logger()
 	return &Server{}
 }

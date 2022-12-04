@@ -3,7 +3,6 @@ module github.com/SpeedSlime/Asahi
 go 1.18
 
 require (
-	github.com/fatih/color v1.13.0
 	github.com/go-chi/chi v1.5.4
 	github.com/rs/zerolog v1.28.0
 )
