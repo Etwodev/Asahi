@@ -14,7 +14,8 @@ import (
 func RespondWithError(w http.ResponseWriter, err error) error {
 	req, ok := err.(*RequestError)
 	if ok { RespondWithJSON(w, req.Code(), map[string]string{"error": http.StatusText(req.Code())}) } else { RespondWithJSON(w, 500, map[string]string{"error": http.StatusText(500)}) }
-	return fmt.Errorf("RespondWithError: %w", err)
+	if req.Code() - 500 >= 0 && req.Code() - 500 <= 99 { return fmt.Errorf("RespondWithError: %w", err) }
+	return nil
 }
 
 func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
@@ -24,8 +25,10 @@ func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
 	return nil
 }
 
-func RespondWithCode(w http.ResponseWriter, httpcode int, code string) {
-	RespondWithJSON(w, httpcode, map[string]string{"result": code})
+func RespondWithCode(w http.ResponseWriter, httpcode int, code string) error {
+	err := RespondWithJSON(w, httpcode, map[string]string{"result": code})
+	if err != nil { return err }
+	return nil
 }
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) error {
