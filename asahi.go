@@ -83,7 +83,7 @@ func (s *Server) Start() {
 }
 
 func Handle(err error, function string) {
-	log.Info().Str("Function", function).Err(err).Msg("Unexpected error")
+	if err != nil { log.Info().Str("Function", function).Err(err).Msg("Unexpected error") }
 }
 
 func (s *Server) handler() *chi.Mux {
