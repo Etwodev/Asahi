@@ -18,15 +18,16 @@ func RespondWithError(w http.ResponseWriter, err error) error {
 	return nil
 }
 
-func RespondWithFile(w http.ResponseWriter, httpcode int, path string) error {
+func RespondWithFile(w http.ResponseWriter, code int, path string) error {
 	bin, err := open(c.Assets() + filepath.Clean(path));
 	if err != nil { return RespondWithError(w, err) }
-	RespondWithDetect(w, httpcode, bin)
+	RespondWithDetect(w, code, bin)
 	return nil
 }
 
-func RespondWithCode(w http.ResponseWriter, httpcode int, code string) error {
-	err := RespondWithJSON(w, httpcode, map[string]string{"result": code})
+func RespondWithResult(w http.ResponseWriter, code int, msg string) error {
+	if msg == "" { return RespondWithError(w, &RequestError{Function: "RespondWithResult", StatusCode: code, Err: fmt.Errorf("Error: %s", http.StatusText(code)),}) }
+	err := RespondWithJSON(w, code, map[string]string{"result": msg})
 	if err != nil { return err }
 	return nil
 }

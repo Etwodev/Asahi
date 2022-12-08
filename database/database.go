@@ -20,7 +20,7 @@ func Connect(dvr string, dsn string) error {
 	return nil
 }
 
-func Create(tables ...*interface{}) error {
+func Create(tables ...interface{}) error {
 	err := engine.CreateTables(&tables)
 	if err != nil {
 		return fmt.Errorf("Create: failed creating table: %w", err)
@@ -28,7 +28,7 @@ func Create(tables ...*interface{}) error {
 	return nil
 }
 
-func Delete(table, record *interface{}) error {
+func Delete(table, record interface{}) error {
 	_, err := engine.Delete(&record)
 	if err != nil {
 		return fmt.Errorf("Create: failed deleting record: %w", err)
@@ -36,7 +36,7 @@ func Delete(table, record *interface{}) error {
 	return nil
 }
 
-func Update(record *interface{}, cols ...string) error {
+func Update(record interface{}, cols ...string) error {
 	db := engine.AllCols()
 	if cols != nil {
 		db = engine.Cols(cols...)
@@ -48,15 +48,15 @@ func Update(record *interface{}, cols ...string) error {
 	return nil
 }
 
-func Select(record *interface{}) error {
-	_, err := engine.Get(&record)
+func Select(record interface{}) (bool, error) {
+	has, err := engine.Get(&record)
 	if err != nil {
-		return fmt.Errorf("Select: failed selecting record: %w", err)
+		return has, fmt.Errorf("Select: failed selecting record: %w", err)
 	}
-	return nil
+	return has, nil
 }
 
-func Exists(record *interface{}) bool {
+func Exists(record interface{}) bool {
 	has, _ := engine.Exist(&record)
 	return has
 }

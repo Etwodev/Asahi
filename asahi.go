@@ -82,6 +82,10 @@ func (s *Server) Start() {
 	log.Info().Str("Port", c.Port()).Str("Address", c.Address()).Bool("Experimental", c.Experimental()).Bool("Status", s.Status()).Msg("Server stopped")
 }
 
+func Handle(err error, function string) {
+	log.Info().Str("Function", function).Err(err).Msg("Unexpected error")
+}
+
 func (s *Server) handler() *chi.Mux {
 	m := chi.NewMux()
 	for _, middleware := range s.middlewares {
