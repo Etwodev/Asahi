@@ -15,10 +15,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var (
-	log zerolog.Logger
-)
-
+var log zerolog.Logger
 type Server struct {
 	status      bool
 	idle        chan struct{}
@@ -47,7 +44,8 @@ func New() *Server {
 		if _, err := strconv.Atoi(v); err == nil { return fmt.Sprintf("\"\x1b[34;1m%s\x1b[0m\"", v) }
 		return fmt.Sprintf("\"\x1b[35;1m%s\x1b[0m\"", v)
 	}
-	log = zerolog.New(output).With().Timestamp().Logger()
+	log = zerolog.New(output).With().Timestamp().Logger()	
+
 	return &Server{}
 }
 
