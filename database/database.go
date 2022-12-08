@@ -6,12 +6,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
+
+	c "github.com/SpeedSlime/Asahi/config"
 )
 
 var engine 	*xorm.Engine
 
-func Connect(dvr string, dsn string) error {
-	db, err := xorm.NewEngine(dvr, dsn)
+func Connect() error {
+	db, err := xorm.NewEngine(c.DRV(), c.DSN())
 	if err != nil {
 		return fmt.Errorf("Connect: an error has occured: %s", err)
 	}

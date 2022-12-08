@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	c "github.com/SpeedSlime/Asahi/config"
+	db "github.com/SpeedSlime/Asahi/database"
 	"github.com/SpeedSlime/Asahi/middleware"
 	"github.com/SpeedSlime/Asahi/router"
 	"github.com/go-chi/chi"
@@ -28,11 +29,6 @@ func (s Server) Status() bool {
 }
 
 func New() *Server {
-	err := c.New()
-	if err != nil {
-		log.Fatal().Str("Function", "New").Err(err).Msg("Unexpected error")
-	}
-
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006/01/02 15:04:05", NoColor: true,}
 	output.FormatLevel = func(i interface{}) string { return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[35;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i))) }
 	output.FormatMessage = func(i interface{}) string { return fmt.Sprintf("\x1b[36m%s\x1b[0m\x1b[36m\"\x1b[0m", i) }
@@ -45,6 +41,16 @@ func New() *Server {
 		return fmt.Sprintf("\"\x1b[35;1m%s\x1b[0m\"", v)
 	}
 	log = zerolog.New(output).With().Timestamp().Logger()	
+
+	err := c.New()
+	if err != nil {
+		log.Fatal().Str("Function", "New").Err(err).Msg("Unexpected error")
+	}
+
+	db.Connect()
+	if err != nil {
+		log.Fatal().Str("Function", "New").Err(err).Msg("Unexpected error")
+	}
 
 	return &Server{}
 }

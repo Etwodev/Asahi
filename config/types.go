@@ -5,6 +5,8 @@ type Config struct {
 	Address      string `json:"address"`
 	Assets		 string	 `json:"assets"`
 	Experimental bool	 `json:"experimental"`
+	DRV			 string	 `json:"drv"`
+	DSN			 string	 `json:"dsn"`
 }
 
 func Port() string {
@@ -21,4 +23,12 @@ func Experimental() bool {
 
 func Assets() string {
 	return c.Assets
+}
+
+func DRV() string {
+	return c.DRV
+}
+
+func DSN() string {
+	return c.DSN
 }
