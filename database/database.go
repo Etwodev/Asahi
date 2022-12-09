@@ -31,7 +31,7 @@ func Create(tables ...interface{}) error {
 }
 
 func Delete(table, record interface{}) error {
-	_, err := engine.Delete(&record)
+	_, err := engine.Delete(record)
 	if err != nil {
 		return fmt.Errorf("Delete: failed deleting record: %w", err)
 	}
@@ -43,7 +43,7 @@ func Update(record interface{}, cols ...string) error {
 	if cols != nil {
 		db = engine.Cols(cols...)
 	}
-	_, err := db.Update(&record)
+	_, err := db.Update(record)
 	if err != nil {
 		return fmt.Errorf("Update: failed updating record: %w", err)
 	}
@@ -51,7 +51,7 @@ func Update(record interface{}, cols ...string) error {
 }
 
 func Select(record interface{}) (bool, error) {
-	has, err := engine.Get(&record)
+	has, err := engine.Get(record)
 	if err != nil {
 		return has, fmt.Errorf("Select: failed selecting record: %w", err)
 	}
@@ -59,7 +59,7 @@ func Select(record interface{}) (bool, error) {
 }
 
 func Exists(record interface{}) bool {
-	has, _ := engine.Exist(&record)
+	has, _ := engine.Exist(record)
 	return has
 }
 
