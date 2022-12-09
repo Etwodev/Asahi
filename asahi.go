@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+
 	c "github.com/SpeedSlime/Asahi/config"
 	db "github.com/SpeedSlime/Asahi/database"
 	"github.com/SpeedSlime/Asahi/middleware"
@@ -17,6 +18,7 @@ import (
 )
 
 var log zerolog.Logger
+
 type Server struct {
 	status      bool
 	idle        chan struct{}
@@ -29,20 +31,48 @@ func (s Server) Status() bool {
 }
 
 func New() *Server {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006/01/02 15:04:05", NoColor: true,}
-	output.FormatLevel = func(i interface{}) string { return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[35;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i))) }
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006/01/02 15:04:05", NoColor: true}
+	output.FormatLevel = func(i interface{}) string {
+		switch strings.ToUpper(fmt.Sprintf("%s", i)) {
+		case "INFO":
+			return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[35;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i)))
+		case "WARN":
+			return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[33;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i)))
+		case "ERROR":
+			return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[91;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i)))
+		case "FATAL":
+			return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[31;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i)))
+		default:
+			return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[95;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i)))
+		} 
+	}
 	output.FormatMessage = func(i interface{}) string { return fmt.Sprintf("\x1b[36m%s\x1b[0m\x1b[36m\"\x1b[0m", i) }
 	output.FormatFieldName = func(i interface{}) string { return fmt.Sprintf("%s: ", i) }
 	output.FormatErrFieldName = func(i interface{}) string { return "Error: " }
-	output.FormatErrFieldValue = func(i interface{}) string { return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", i) }
+	output.FormatErrFieldValue = func(i interface{}) string { 
+		v := fmt.Sprint(i)
+		if v[0] == '"' {
+			v = v[1:]
+		}
+		if i := len(v)-1; v[i] == '"' {
+			v = v[:i]
+		}
+		return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", v) 
+	}
 	output.FormatFieldValue = func(i interface{}) string {
 		v := fmt.Sprintf("%s", i)
-		if v == "false" { return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", v) }
-		if v == "true" { return fmt.Sprintf("\"\x1b[32;1m%s\x1b[0m\"", v) }
-		if _, err := strconv.Atoi(v); err == nil { return fmt.Sprintf("\"\x1b[34;1m%s\x1b[0m\"", v) }
+		if v == "false" {
+			return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", v)
+		}
+		if v == "true" {
+			return fmt.Sprintf("\"\x1b[32;1m%s\x1b[0m\"", v)
+		}
+		if _, err := strconv.Atoi(v); err == nil {
+			return fmt.Sprintf("\"\x1b[34;1m%s\x1b[0m\"", v)
+		}
 		return fmt.Sprintf("\"\x1b[35;1m%s\x1b[0m\"", v)
 	}
-	log = zerolog.New(output).With().Timestamp().Logger()	
+	log = zerolog.New(output).With().Timestamp().Logger()
 
 	err := c.New()
 	if err != nil {
@@ -91,7 +121,9 @@ func (s *Server) Start() {
 }
 
 func Handle(err error, function string) {
-	if err != nil { log.Info().Str("Function", function).Err(err).Msg("Unexpected error") }
+	if err != nil {
+		log.Error().Str("Function", function).Err(err).Msg("Unexpected error")
+	}
 }
 
 func (s *Server) handler() *chi.Mux {
