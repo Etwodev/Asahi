@@ -33,6 +33,8 @@ func New() *Server {
 	output.FormatLevel = func(i interface{}) string { return fmt.Sprintf("\x1b[36m\"\x1b[0m\x1b[35;1m%s\x1b[0m", strings.ToUpper(fmt.Sprintf("%s", i))) }
 	output.FormatMessage = func(i interface{}) string { return fmt.Sprintf("\x1b[36m%s\x1b[0m\x1b[36m\"\x1b[0m", i) }
 	output.FormatFieldName = func(i interface{}) string { return fmt.Sprintf("%s: ", i) }
+	output.FormatErrFieldName = func(i interface{}) string { return "Error: " }
+	output.FormatErrFieldValue = func(i interface{}) string { return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", i) }
 	output.FormatFieldValue = func(i interface{}) string {
 		v := fmt.Sprintf("%s", i)
 		if v == "false" { return fmt.Sprintf("\"\x1b[31;1m%s\x1b[0m\"", v) }

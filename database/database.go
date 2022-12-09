@@ -23,7 +23,7 @@ func Connect() error {
 }
 
 func Create(tables ...interface{}) error {
-	err := engine.CreateTables(&tables)
+	err := engine.CreateTables(tables...)
 	if err != nil {
 		return fmt.Errorf("Create: failed creating table: %w", err)
 	}
@@ -33,7 +33,7 @@ func Create(tables ...interface{}) error {
 func Delete(table, record interface{}) error {
 	_, err := engine.Delete(&record)
 	if err != nil {
-		return fmt.Errorf("Create: failed deleting record: %w", err)
+		return fmt.Errorf("Delete: failed deleting record: %w", err)
 	}
 	return nil
 }
@@ -66,7 +66,7 @@ func Exists(record interface{}) bool {
 func Query(sql string) ([]map[string][]byte, error) {
 	results, err := engine.Query(sql)
 	if err != nil {
-		return nil, fmt.Errorf("Query: failed fetching item: %w", err)
+		return nil, fmt.Errorf("Query: failed querying item: %w", err)
 	}
 	return results, nil
 }
