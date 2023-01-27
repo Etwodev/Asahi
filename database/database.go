@@ -63,6 +63,26 @@ func Exists(record interface{}) bool {
 	return has
 }
 
+func Find(record interface{}) (bool, error) {
+	has := Exists(record)
+	if !has {
+		return has, nil
+	}
+	err := engine.Find(record)
+	if err != nil {
+		return has, fmt.Errorf("Find: failed finding record: %w", err)
+	}
+	return has, err
+}
+
+func Insert(record interface{}) error {
+	_, err := engine.Insert(record)
+	if err != nil {
+		return fmt.Errorf("Insert: failed inserting item: %w", err)
+	}
+	return nil
+}
+
 func Query(sql string) ([]map[string][]byte, error) {
 	results, err := engine.Query(sql)
 	if err != nil {
