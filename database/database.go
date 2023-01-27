@@ -63,7 +63,7 @@ func Exists(record interface{}) bool {
 	return has
 }
 
-func Find(records []interface{}, cond interface{}) (bool, error) {
+func Find(records interface{}, cond interface{}) (bool, error) {
 	has := Exists(cond)
 	if !has {
 		return has, nil
