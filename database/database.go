@@ -63,20 +63,20 @@ func Exists(record interface{}) bool {
 	return has
 }
 
-func Find(record interface{}) (bool, error) {
-	has := Exists(record)
+func Find(records []interface{}, cond interface{}) (bool, error) {
+	has := Exists(cond)
 	if !has {
 		return has, nil
 	}
-	err := engine.Find(record)
+	err := engine.Find(records, cond)
 	if err != nil {
 		return has, fmt.Errorf("Find: failed finding record: %w", err)
 	}
-	return has, err
+	return has, nil
 }
 
-func Insert(record interface{}) error {
-	_, err := engine.Insert(record)
+func Insert(record ...interface{}) error {
+	_, err := engine.Insert(record...)
 	if err != nil {
 		return fmt.Errorf("Insert: failed inserting item: %w", err)
 	}
