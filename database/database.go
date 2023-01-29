@@ -43,7 +43,7 @@ func Update(record interface{}, cond interface{}) (bool, error) {
 	if !has {
 		return has, nil
 	}
-	_, err := engine.Update(record, cond)
+	_, err := engine.UseBool().Update(record, cond)
 	if err != nil {
 		return has, fmt.Errorf("Update: failed updating record: %w", err)
 	}
