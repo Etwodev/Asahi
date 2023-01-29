@@ -38,16 +38,16 @@ func Delete(record interface{}) error {
 	return nil
 }
 
-func Update(record interface{}, cols ...string) error {
-	db := engine.AllCols()
-	if cols != nil {
-		db = engine.Cols(cols...)
+func Update(record interface{}, cond interface{}) (bool, error) {
+	has := Exists(cond)
+	if !has {
+		return has, nil
 	}
-	_, err := db.Update(record)
+	_, err := engine.Update(record, cond)
 	if err != nil {
-		return fmt.Errorf("Update: failed updating record: %w", err)
+		return has, fmt.Errorf("Update: failed updating record: %w", err)
 	}
-	return nil
+	return has, nil
 }
 
 func Select(record interface{}) (bool, error) {
