@@ -30,7 +30,7 @@ func Create(tables ...interface{}) error {
 	return nil
 }
 
-func Delete(table, record interface{}) error {
+func Delete(record interface{}) error {
 	_, err := engine.Delete(record)
 	if err != nil {
 		return fmt.Errorf("Delete: failed deleting record: %w", err)
