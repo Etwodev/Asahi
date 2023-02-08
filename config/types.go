@@ -3,7 +3,7 @@ package config
 type Config struct {
 	Port         string `json:"port"`
 	Address      string `json:"address"`
-	Assets		 string	 `json:"assets"`
+	Public		 string	 `json:"public"`
 	Experimental bool	 `json:"experimental"`
 	DRV			 string	 `json:"drv"`
 	DSN			 string	 `json:"dsn"`
@@ -21,8 +21,8 @@ func Experimental() bool {
 	return c.Experimental
 }
 
-func Assets() string {
-	return c.Assets
+func Public() string {
+	return c.Public
 }
 
 func DRV() string {

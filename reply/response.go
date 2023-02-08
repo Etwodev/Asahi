@@ -19,7 +19,7 @@ func RespondWithError(w http.ResponseWriter, err error) error {
 }
 
 func RespondWithFile(w http.ResponseWriter, code int, path string) error {
-	bin, err := open(c.Assets() + filepath.Clean(path));
+	bin, err := open(c.Public() + filepath.Clean(path));
 	if err != nil { return RespondWithError(w, err) }
 	RespondWithDetect(w, code, bin)
 	return nil
