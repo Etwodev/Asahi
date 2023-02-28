@@ -2,6 +2,7 @@ package asahi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -153,4 +154,13 @@ func (s *Server) initMux(m *chi.Mux) {
 
 func Parameter(r *http.Request, k string) string {
 	return chi.URLParam(r, k)
+}
+
+func ParseJSON(r *http.Request) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
