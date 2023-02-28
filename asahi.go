@@ -156,11 +156,12 @@ func Parameter(r *http.Request, k string) string {
 	return chi.URLParam(r, k)
 }
 
-func ParseJSON(r *http.Request) (map[string]interface{}, error) {
-	var data map[string]interface{}
-	err := json.NewDecoder(r.Body).Decode(&data)
+func ParseJSON(r *http.Request, i interface{}) error {
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	err := d.Decode(i)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return data, nil
+	return nil
 }
